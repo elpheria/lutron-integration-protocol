@@ -16,11 +16,12 @@ var retrying;
 
 /* Startup */
 
-connect();
+// connect();
 
 /* Command Line Interface */
 
-repl.start({ prompt: '> ', eval: evaulateCliCommands });
+// repl.start({ prompt: '> ', eval: evaulateCliCommands });
+
 function evaulateCliCommands(command, context, filename, callback) {
   processCommand(command);
   callback(null, 'OK');
@@ -63,7 +64,7 @@ function processCommand(command) {
 /* Parse Device Responses */
 
 function parseResponse(response) {
-  log('Parsing response ' + response);  
+  log('Parsing response ' + response);
   responseArray = response.toString().split('\r\n');
   for (var i = 0; i < responseArray.length; i++) {
     if (responseArray[i] != 'QNET> ' && responseArray[i].length > 0 && isAlive === true) {
@@ -91,14 +92,16 @@ async function sendToSocket(message) {
   }
 }
 
-async function connect() {
+async function connect(params) {
   client = new Telnet();
-  if (port && ipAddress) {
-    log('Connecting with ip address: ' + ipAddress + ' and port: ' + port + ' and login: ' + login);
+
+  if (params.port && params.host) {
+    log('Connecting with ip address: ' + params.host + ' and port: ' + params.port + ' and login: ' + login);
+
     var options = {
       debug: true,
-      host: ipAddress,
-      port: port,
+      host: params.host,
+      port: params.port,
       negotiationMandatory: true,
       timeout: 0,
       loginPrompt: 'login: ',
@@ -107,6 +110,7 @@ async function connect() {
       password: password + '\r',
       shellPrompt: 'QNET>',
     };
+
     client.connect(options).catch((err) => {
       errorEventHandler(err);
     });
@@ -129,15 +133,15 @@ async function connect() {
     });
 
     client.on('timeout', function () {
-      timeoutEventHandler();
+      // timeoutEventHandler();
     });
 
     client.on('close', function () {
-      closeEventHandler();
+      // closeEventHandler();
     });
 
   } else {
-    log('Cannot connect with ip address: ' + ipAddress + ' and port: ' + port);
+    log('Cannot connect with ip address: ' + params.host + ' and port: ' + params.port);
   }
 }
 
@@ -202,16 +206,22 @@ function closeEventHandler() {
   if (heartbeat) {
     clearInterval(heartbeat);
   }
+
   if (reconnectTimeout) {
     clearInterval(reconnectTimeout);
   }
+
   sendResponse('catch-service-disconnected');
   log('Socket closed.');
+
   if (!retrying && !doNotReconnect) {
     retrying = true;
-    log('Reconnecting...');
+    log('Reconnecting... ');
   }
+
   if (!doNotReconnect) {
     reconnectTimeout = setTimeout(connect.bind(this), 10000);
   }
 }
+
+exports.connect = connect

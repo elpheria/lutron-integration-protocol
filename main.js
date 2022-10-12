@@ -39,6 +39,7 @@ process.on("message", (data) => {
 
 function sendResponse(response) {
   log(response);
+
   //process.send() only exists if the app is started as a child process
   if (typeof process.send === 'function') {
     process.send(response);
@@ -66,11 +67,13 @@ function processCommand(command) {
 function parseResponse(response) {
   log('Parsing response ' + response);
   responseArray = response.toString().split('\r\n');
+
   for (var i = 0; i < responseArray.length; i++) {
     if (responseArray[i] != 'QNET> ' && responseArray[i].length > 0 && isAlive === true) {
       sendResponse(responseArray[i]);
     }
   }
+
   isAlive = true;
 }
 
@@ -79,6 +82,7 @@ function parseResponse(response) {
 async function sendToSocket(message) {
   if (client) {
     log('Sending to socket: ' + message);
+
     client.send(message + '\r', (error, data) => {
       // if (error) {
       //   log("sendToSocket result error: ", error)
